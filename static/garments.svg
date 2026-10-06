@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+<symbol id="blouse" viewBox="0 0 60 75"><path fill="currentColor" d="m19 12 7-4h8l7 4 12 10-7 16-7-5 2 30H19l2-30-7 5-7-16Z"/><path d="m26 8 4 13 4-13M30 21v42M21 16l-2 47m20-47 2 47" fill="none" stroke="#fff" stroke-width=".7" opacity=".7"/><g fill="#fff" opacity=".6"><circle cx="32" cy="30" r=".8"/><circle cx="32" cy="39" r=".8"/><circle cx="32" cy="48" r=".8"/></g></symbol>
+<symbol id="shirt" viewBox="0 0 60 75"><path fill="currentColor" d="m20 11 7-3h6l7 3 15 11-7 15-10-5 2 31H20l2-31-10 5-7-15Z"/><path d="M26 9q4 12 8 0M20 57h20" stroke="white" fill="none" stroke-width=".8" opacity=".5"/></symbol>
+<symbol id="pants" viewBox="0 0 60 75"><path fill="currentColor" d="M18 9h24l3 56-13 1-2-39-2 39-13-1Z"/><path d="M17 15h26M30 15v12m-9-11-4 47m22-47 4 47" stroke="#fff" fill="none" stroke-width=".7" opacity=".5"/></symbol>
+<symbol id="dress" viewBox="0 0 60 75"><path fill="currentColor" d="m20 9 7-2q3 7 6 0l7 2 2 17-7 7 14 32H11l14-32-7-7Z"/><path d="M25 32h10M30 33v32m-4-29-9 28m17-28 9 28" stroke="white" fill="none" stroke-width=".8" opacity=".5"/></symbol>
+<symbol id="jacket" viewBox="0 0 60 75"><path fill="currentColor" d="m20 10 6-4h8l6 4 11 10 5 38-10 3-8-31 4 33H18l4-33-8 31-10-3 5-38Z"/><path d="m26 6-4 15 8 9 8-9-4-15M30 30v33M19 48h8m6 0h8" stroke="white" fill="none" stroke-width=".8" opacity=".6"/></symbol>
+<symbol id="other" viewBox="0 0 60 75"><path fill="currentColor" d="m20 11 7-3h6l7 3 15 11-7 15-10-5 2 31H20l2-31-10 5-7-15Z"/><path d="M26 9q4 12 8 0M20 57h20" stroke="white" fill="none" stroke-width=".8" opacity=".5"/></symbol>
+</svg>

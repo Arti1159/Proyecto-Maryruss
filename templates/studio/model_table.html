@@ -1,0 +1,11 @@
+{% load studio_tags %}
+<div class="table-wrap"><table class="data-table"><thead><tr><th>Modelo</th><th>Producción</th><th>Presupuesto</th><th>Costo registrado</th><th>Estado</th><th><span class="sr-only">Ver</span></th></tr></thead><tbody>
+{% for garment in models %}<tr>
+ <td><a class="model-cell" href="{% url 'garment_detail' garment.pk %}">{% include 'studio/avatar.html' %}<span><strong>{{ garment.name }}</strong><small>{{ garment.code }} · {{ garment.collection.name }}{% if garment.archived %} · Archivado{% endif %}</small></span></a></td>
+ <td><div class="unit-pair"><strong>{{ garment.summary.good|num }}</strong><span>/ {{ garment.summary.units|num }} un.</span></div><div class="mini-progress" aria-label="{{ garment.summary.progress }} por ciento aprobadas"><span style="width:{{ garment.summary.progress }}%"></span></div></td>
+ <td><strong class="amount">{{ garment.summary.baseline|pen }}</strong><small class="subline">{{ garment.summary.baseline_unit|pen }} / un. {% if garment.approved_budget == None %}· sin aprobar{% endif %}</small></td>
+ <td><strong class="amount {% if garment.summary.over_budget %}text-danger{% endif %}">{{ garment.summary.actual|pen }}</strong><small class="subline">{{ garment.summary.actual_unit|pen }} / un. del plan</small></td>
+ <td>{% if garment.summary.overdue %}<span class="badge danger">Entrega vencida</span>{% elif garment.summary.over_budget %}<span class="badge danger">Exceso de costo</span>{% else %}<span class="badge stage-{{ garment.summary.stage_key }}">{{ garment.summary.status }}</span>{% endif %}{% if garment.summary.changed %}<small class="subline text-amber">Plan con cambios</small>{% endif %}</td>
+ <td><a class="icon-button" href="{% url 'garment_detail' garment.pk %}" aria-label="Abrir {{ garment.name }}">{% include 'studio/icon.html' with name='arrow-right' %}</a></td>
+</tr>{% empty %}<tr><td colspan="6"><div class="empty-state"><span class="empty-icon">{% include 'studio/icon.html' with name='shirt' %}</span><strong>Tu próximo modelo empieza aquí.</strong><p>Añade una prenda, sus cantidades y su presupuesto para comenzar.</p>{% if user.is_staff %}<a href="{% url 'garment_create' %}" class="btn btn-primary">Crear modelo</a>{% endif %}</div></td></tr>{% endfor %}
+</tbody></table></div>

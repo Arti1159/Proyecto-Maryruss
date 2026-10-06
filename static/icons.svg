@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+<symbol id="dashboard" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+<symbol id="layers" viewBox="0 0 24 24"><path d="m12 3 10 5-10 5L2 8Zm-9 10 9 5 9-5M3 18l9 5 9-5"/></symbol>
+<symbol id="shirt" viewBox="0 0 24 24"><path d="M8 3 3 5 1 11l5 2v8h12v-8l5-2-2-6-5-2c0 4-8 4-8 0Z"/></symbol>
+<symbol id="wallet" viewBox="0 0 24 24"><path d="M20 7H5a2 2 0 0 1-2-2 2 2 0 0 1 2-2h13v4M3 5v14a2 2 0 0 0 2 2h15V7"/><path d="M20 11h-5v6h5M16 14h.1"/></symbol>
+<symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></symbol>
+<symbol id="calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 2v6M17 2v6M3 10h18m-13 5h1m5 0h1"/></symbol>
+<symbol id="check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/><circle cx="12" cy="12" r="10"/></symbol>
+<symbol id="receipt" viewBox="0 0 24 24"><path d="M5 2h14v20l-3-2-4 2-4-2-3 2ZM8 7h8M8 11h8m-8 4h5"/></symbol>
+<symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="arrow-right" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+<symbol id="arrow-up-right" viewBox="0 0 24 24"><path d="M6 18 18 6M7 6h11v11"/></symbol>
+<symbol id="chart" viewBox="0 0 24 24"><path d="M3 3v18h18M7 16v-3m5 3V9m5 7V5"/></symbol>
+<symbol id="search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+<symbol id="help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 8c.4-3 6-3 6 0 0 2-3 2-3 5m0 4h.01"/></symbol>
+<symbol id="info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7h.01M12 11v6"/></symbol>
+<symbol id="menu" viewBox="0 0 24 24"><path d="M3 5h18M3 12h18M3 19h18"/></symbol>
+<symbol id="trash" viewBox="0 0 24 24"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></symbol>
+<symbol id="download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 15v6h16v-6"/></symbol>
+</svg>
