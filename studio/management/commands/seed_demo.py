@@ -47,7 +47,7 @@ class Command(BaseCommand):
                 ('packaging', 'Empaque', 'unit', '1', 'prenda', '1.00'),
                 ('transport', 'Entrega del lote', 'batch', '1', 'servicio', '100.00'),
             ]:
-                BudgetLine.objects.create(garment=model, category=kind, description=label, basis=basis, quantity=quantity, unit=unit, unit_price=unit_price)
+                BudgetLine.objects.create(garment=model, category_id=kind, description=label, basis=basis, quantity=quantity, unit=unit, unit_price=unit_price)
             approve_budget(model.pk, user)
             for kind, number in [('cut', cut), ('sewing', sewn), ('finishing', finishing), ('approved', good), ('rejected', rejects)]:
                 if number:

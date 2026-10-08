@@ -18,7 +18,7 @@ def snapshot(garment):
     lines = list(garment.budget_lines.all())
     return {
         'units': garment.planned_units,
-        'lines': [{'id': l.id, 'category': l.category, 'description': l.description, 'basis': l.basis,
+        'lines': [{'id': l.id, 'category': l.category_id, 'description': l.description, 'basis': l.basis,
                    'quantity': str(l.quantity), 'unit': l.unit, 'unit_price': str(l.unit_price)} for l in lines],
         'total': str(sum((line_total(l, garment.planned_units) for l in lines), ZERO)),
     }
@@ -161,6 +161,9 @@ def record_expense(pk, user, cleaned, token):
             raise ValidationError('La referencia ya se usó para otro modelo.')
         return existing, False
     check_active(garment)
+    cleaned = dict(cleaned)
+    if isinstance(cleaned.get('category'), str):
+        cleaned['category_id'] = cleaned.pop('category')
     expense = Expense(garment=garment, created_by=user, token=token, **cleaned)
     expense.full_clean()
     if expense.date > timezone.localdate():

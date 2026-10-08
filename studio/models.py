@@ -2,16 +2,48 @@ import uuid
 from decimal import Decimal
 from django.conf import settings
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.functions import Lower
 from django.utils import timezone
 
 ZERO = Decimal('0')
-CATEGORIES = [
-    ('fabric', 'Tela'), ('supplies', 'Insumos'), ('cut', 'Corte'), ('sewing', 'Confección'),
-    ('finishing', 'Acabados'), ('packaging', 'Empaque'), ('transport', 'Transporte'), ('other', 'Otros'),
-]
 STAGES = [('cut', 'Corte'), ('sewing', 'Confección'), ('finishing', 'Acabados'),
           ('approved', 'Aprobadas por calidad'), ('rejected', 'Rechazadas por calidad')]
+
+def category_code():
+    return 'custom_' + uuid.uuid4().hex
+
+class ExpenseCategory(models.Model):
+    code = models.CharField(primary_key=True, max_length=48, default=category_code, editable=False)
+    name = models.CharField('Nombre de la categoría', max_length=60)
+    description = models.CharField('¿Qué gastos incluye?', max_length=280, blank=True)
+    active = models.BooleanField(default=True)
+    sort_order = models.PositiveIntegerField(default=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['sort_order', 'name', 'code']
+        constraints = [models.UniqueConstraint(Lower('name'), name='unique_expense_category_name')]
+
+    def __str__(self):
+        return self.name if self.active else f'{self.name} (archivada)'
+
+class CategorizedCost(models.Model):
+    category = models.ForeignKey(ExpenseCategory, on_delete=models.PROTECT, db_column='category', verbose_name='Categoría de gasto')
+
+    class Meta:
+        abstract = True
+
+    def get_category_display(self):
+        return self.category.name
+
+    def clean(self):
+        super().clean()
+        if self.category_id and ExpenseCategory.objects.filter(pk=self.category_id, active=False).exists():
+            original = type(self).objects.filter(pk=self.pk).values_list('category_id', flat=True).first() if self.pk else None
+            if original != self.category_id:
+                raise ValidationError({'category': 'Esta categoría está archivada. Elige una activa o reactívala en Ajustes.'})
 
 class Collection(models.Model):
     name = models.CharField('Nombre', max_length=100)
@@ -58,9 +90,8 @@ class Garment(models.Model):
     def __str__(self):
         return f'{self.code} · {self.name}'
 
-class BudgetLine(models.Model):
+class BudgetLine(CategorizedCost):
     garment = models.ForeignKey(Garment, on_delete=models.PROTECT, related_name='budget_lines')
-    category = models.CharField('Categoría', max_length=16, choices=CATEGORIES)
     description = models.CharField('Concepto', max_length=120)
     basis = models.CharField('Se aplica', max_length=12, choices=[('unit', 'A cada prenda'), ('batch', 'Una vez al lote')], default='unit')
     quantity = models.DecimalField('Cantidad / consumo', max_digits=10, decimal_places=4, default=1, validators=[MinValueValidator(Decimal('0.0001'))])
@@ -71,9 +102,8 @@ class BudgetLine(models.Model):
         ordering = ['id']
         constraints = [models.CheckConstraint(condition=models.Q(quantity__gt=0) & models.Q(unit_price__gte=0), name='valid_budget_line')]
 
-class Expense(models.Model):
+class Expense(CategorizedCost):
     garment = models.ForeignKey(Garment, on_delete=models.PROTECT, related_name='expenses', verbose_name='Modelo')
-    category = models.CharField('Categoría', max_length=16, choices=CATEGORIES)
     description = models.CharField('Concepto', max_length=160)
     amount = models.DecimalField('Costo real total (S/)', max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
     paid_amount = models.DecimalField('Importe pagado (S/)', max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(ZERO)])

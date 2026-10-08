@@ -4,8 +4,14 @@ Aplicación web en español para seguir producciones por modelo y controlar pres
 
 Esta entrega prioriza el seguimiento y el presupuesto solicitado. La especificación completa revisada está en [docs/ESPECIFICACION_COMPLETA.md](docs/ESPECIFICACION_COMPLETA.md); sus funciones posteriores no se presentan como implementadas.
 
+El área **Planificador** permite preparar colecciones antes de producir. Sigue [su guía de uso y alcance real](docs/PLANIFICADOR.md): variantes, evidencia, propuestas, versiones, escenarios y configuración opcional de investigación.
+
 ## Qué puedes usar
 
+- Planificador previo: productos por color/talla, stock y objetivos, costos completos o desglosados con merma, mínimos, múltiplos, capacidad y plazos.
+- Evidencia manual, tres simulaciones, versiones revisadas, comparación, CSV y resumen imprimible.
+- Escenarios de venta que separan resultado bruto, efectivo recuperado, inversión y stock restante.
+- Conector opcional real de investigación Tavily; sin clave, evidencia manual y estado explícito sin investigación online. No hay IA de ventas ni resultados simulados.
 - Colecciones con presupuesto y fecha objetivo.
 - Modelos con código, cantidad prevista, taller, colores y referencia de tallas.
 - Presupuesto desglosado: consumo × precio por insumo, aplicado a cada prenda o una vez al lote.
@@ -14,8 +20,15 @@ Esta entrega prioriza el seguimiento y el presupuesto solicitado. La especificac
 - Corte, confección, acabados, calidad y rechazos; entregas parciales y límites entre etapas.
 - Costos reales por categoría, proveedor y referencia, con pagos acumulados separados.
 - Dashboard, filtros, alertas por exceso de costo o entrega vencida y registro de operaciones.
+- Selector de tema claro, oscuro o del sistema en toda la aplicación, con preferencia recordada.
+- Presupuesto con ayudas por campo, ejemplos y vista previa de costo por prenda y total.
+- Ajustes para crear, describir, editar, archivar y reactivar categorías de gasto compartidas por presupuesto y costos reales.
 - CSV, respaldo consistente y restauración comprobada.
 - Acceso protegido, administrador y operador, y demostración en una base separada.
+
+## Actualizar una instalación existente
+
+Si ya tienes producciones registradas, sigue [ACTUALIZAR.md](docs/ACTUALIZAR.md). Conserva `.data` y tus credenciales, reemplaza el código y ejecuta `manage.py migrate` antes de iniciar el servidor.
 
 ## Inicio rápido
 
@@ -52,19 +65,19 @@ py -3 -m venv .venv
 .venv\Scripts\python.exe manage.py runserver 127.0.0.1:8000
 ```
 
-Para explorar la demostración en otra terminal, establece `$env:MARYRUSS_DEMO="1"`, ejecuta `manage.py migrate`, `manage.py seed_demo` y `manage.py runserver 127.0.0.1:8001` con el mismo Python de la carpeta Scripts. Las instrucciones Windows son equivalentes, pero no se han ejecutado en este entorno Linux.
+Para explorar la demostración en otra terminal, establece `$env:MARYRUSS_DEMO="1"`, ejecuta `manage.py migrate`, `manage.py seed_demo`, `manage.py seed_planner_demo` y `manage.py runserver 127.0.0.1:8001` con el mismo Python de la carpeta Scripts. Las instrucciones Windows son equivalentes, pero no se han ejecutado en este entorno Linux.
 
 ## Primer recorrido con tus datos
 
 1. Crea una colección y define su presupuesto disponible.
 2. Añade un modelo, sus unidades y el taller.
-3. Añade sus conceptos de costo. Por ejemplo, tela: 1.20 m por prenda a S/ 10 por metro. Para una entrega fija de S/ 100, elige “Una vez al lote”, cantidad 1 y precio 100.
+3. Añade sus conceptos de costo. Por ejemplo, tela: 1.20 m por prenda a S/ 10 por metro. Para una entrega fija de S/ 100, elige “Es un costo para todo el lote”, cantidad 1 y precio 100.
 4. Revisa el total y aprueba cantidades y presupuesto. Si supera el presupuesto de la colección, se requiere marcar explícitamente la autorización de exceso.
 5. Registra avances adicionales: si ayer cortaste 10 y hoy 5, hoy ingresa solo 5. La etapa previa debe contar con suficientes unidades.
 6. Registra costos atribuibles al modelo y cuánto pagaste. Actualizar el total pagado no crea un nuevo costo.
 7. Consulta el modelo y el dashboard; exporta o respalda desde la guía.
 
-Un administrador crea colecciones y modelos, edita planes, aprueba, archiva y anula. Un operador consulta y registra avances, costos y pagos. Para agregar operadores, utiliza el comando de Django siguiente, que solicita la contraseña sin mostrarla:
+Un administrador administra las categorías de gasto en Ajustes, crea colecciones y modelos, edita planes, aprueba, archiva y anula. Un operador consulta y registra avances, costos y pagos. Para agregar operadores, utiliza el comando de Django siguiente, que solicita la contraseña sin mostrarla:
 
 ```bash
 .venv/bin/python manage.py shell
@@ -145,6 +158,8 @@ Para sustituir la base activa, **detén primero el servidor** y omite `--target`
 MARYRUSS_DEMO=1 .venv/bin/python manage.py restore_backup RESPALDO_DEMO.zip --target /tmp/demo-recuperada.sqlite3 --confirm
 ```
 
+Después de restaurar un respaldo, ejecuta `manage.py migrate` sobre la base restaurada antes de iniciar el servidor, especialmente si el respaldo procede de una versión anterior.
+
 Si olvidas la contraseña del administrador, el comando local de Django permite restablecerla de forma interactiva:
 
 ```bash
@@ -156,11 +171,11 @@ Si olvidas la contraseña del administrador, el comando local de Django permite 
 ```bash
 .venv/bin/python manage.py check
 .venv/bin/python manage.py makemigrations --check --dry-run
-.venv/bin/python manage.py test studio
+.venv/bin/python manage.py test
 .venv/bin/python -m pip check
 ```
 
-Las pruebas cubren cálculos, aprobación y versiones, cantidades por etapa, producción parcial, idempotencia, pagos, anulación, permisos, CSRF, fechas, exportación y recuperación.
+Las pruebas cubren migración desde la primera versión sin alterar presupuestos aprobados, categorías personalizadas, archivado, reactivación, guías de campos, cálculos, aprobación y versiones, cantidades por etapa, producción parcial, idempotencia, pagos, anulación, permisos, CSRF, fechas, exportación y recuperación.
 
 Prueba opcional de navegador: requiere Playwright y Chromium. Se utiliza una copia aislada, **nunca la base real**. Instala requirements-dev.txt y un navegador compatible si no están disponibles. Prepara la copia:
 
@@ -174,9 +189,11 @@ En otra terminal:
 
 ```bash
 .venv/bin/python scripts/browser_check.py
+.venv/bin/python scripts/ui_check.py
+.venv/bin/python scripts/planner_check.py
 ```
 
-El script usa `/usr/bin/chromium` por defecto; configura CHROMIUM_PATH si está en otra ubicación. Guarda capturas y un informe en test-results/. Incluye dos operaciones simultáneas sobre el mismo modelo para comprobar límites de producción.
+El script usa `/usr/bin/chromium` por defecto; configura CHROMIUM_PATH si está en otra ubicación. Guarda capturas y un informe en test-results/. Incluye dos operaciones simultáneas sobre el mismo modelo para comprobar límites de producción. `ui_check.py` verifica temas, preferencia persistente, cambios del sistema, ayudas con teclado y toque, categorías creadas sin perder el formulario, registros históricos y ambos temas en pantallas móviles.
 
 ## Configuración y publicación
 
@@ -189,6 +206,7 @@ El script usa `/usr/bin/chromium` por defecto; configura CHROMIUM_PATH si está 
 | MARYRUSS_ALLOWED_HOSTS | Hosts admitidos separados por comas; por defecto solo loopback |
 | MARYRUSS_CSRF_ORIGINS | Orígenes HTTPS confiables separados por comas, si el alojamiento los requiere |
 | MARYRUSS_DEBUG | 0 para producción; activa cookies seguras y redirección HTTPS |
+| TAVILY_API_KEY / MARYRUSS_RESEARCH_API_KEY | Opcional: búsqueda y lectura online de fuentes desde el servidor; ver docs/PLANIFICADOR.md |
 | MARYRUSS_SECRET_KEY | Clave privada alternativa; no guardarla en Git |
 | MARYRUSS_TRUST_PROXY | 1 solo con un proxy propio que garantice el encabezado HTTPS |
 | MARYRUSS_ADMIN_USER / MARYRUSS_ADMIN_PASSWORD | Opcionales para crear el primer acceso; no sustituyen cuentas existentes |
@@ -201,10 +219,10 @@ SQLite y la serialización de las escrituras cubren el uso pequeño en una insta
 
 ## Próximas fases
 
-1. Distribución validada por talla/color y órdenes por lote, con historial de versiones más completo.
+1. Transferencia revisable del plan por talla/color hacia órdenes de producción por lote.
 2. Materiales, reservas, compras y consumo con unidades compatibles.
 3. Inventario comercial, ventas, devoluciones e importaciones revisables.
-4. Comparación de escenarios e investigación con fuentes.
+4. Interpretación asistida de fuentes, comparación temporal y conectores de clima/mercados, con validación real.
 5. Análisis de trazados y, solo con geometrías verificadas, optimización opcional.
 
-Esta entrega no calcula rentabilidad de ventas, impuestos, inventario de telas o trazados. Las referencias de tallas y colores no constituyen un desglose automático. Las prendas aprobadas se cuentan para seguimiento, sin crear un inventario comercial. No hay carga de archivos ni integraciones externas en el MVP actual.
+El Planificador calcula escenarios brutos, caja y margen bajo supuestos visibles; no registra ventas contables, ganancia neta ni impuestos automáticos. Sus variantes no se transfieren automáticamente al seguimiento operativo, donde colores y tallas siguen siendo referencias manuales. No hay inventario de telas, lectura de imágenes ni trazados. El conector de investigación es opcional y requiere configurar un servicio real; su consulta no se ha ejecutado sin clave.

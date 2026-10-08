@@ -1,0 +1,18 @@
+{% extends 'studio/base.html' %}
+{% block breadcrumb %}Ajustes{% endblock %}
+{% block content %}
+<section class="page-heading"><div><span class="eyebrow">A TU MANERA</span><h1>Ajustes</h1><p>Personaliza la apariencia y organiza tus categorías de gasto.</p></div></section>
+<section class="card settings-appearance"><div><h2>Apariencia</h2><p>El tema se aplica a todas las pantallas y se recuerda en este navegador. «Sistema» sigue el tema de tu dispositivo.</p></div>{% include 'studio/theme_selector.html' %}</section>
+<section class="card">
+ <div class="card-heading"><div><h2>Categorías de gasto</h2><p>Las mismas categorías se usan en presupuestos, costos reales y reportes.</p></div>{% if user.is_staff %}<a class="btn btn-primary" href="{% url 'category_create' %}">{% include 'studio/icon.html' with name='plus' %} Nueva categoría</a>{% endif %}</div>
+ <p class="settings-note">Archivar una categoría deja de ofrecerla para registros nuevos y conserva los anteriores. Puedes reactivarla cuando la necesites. Cambiar su nombre actualiza los reportes sin cambiar los importes.</p>
+ {% if not user.is_staff %}<p class="settings-note">Un administrador puede crear, editar y archivar categorías.</p>{% endif %}
+ <div class="category-settings-list">
+ {% for category in categories %}<article class="category-settings-row" data-category-code="{{ category.pk }}">
+  <div class="category-settings-description"><strong>{{ category.name }}</strong><p>{{ category.description|default:'Sin descripción. Puedes añadir una explicación al editar.' }}</p></div>
+  <span class="badge {% if category.active %}live{% else %}subtle{% endif %}">{% if category.active %}Activa{% else %}Archivada{% endif %}</span>
+  {% if user.is_staff %}<div class="row-actions"><a class="text-link" href="{% url 'category_edit' category.pk %}">Editar</a><form method="post" action="{% url 'category_status' category.pk %}">{% csrf_token %}<input type="hidden" name="active" value="{% if category.active %}0{% else %}1{% endif %}"><button type="submit" class="btn btn-secondary btn-small">{% if category.active %}Archivar{% else %}Reactivar{% endif %}</button></form></div>{% endif %}
+ </article>{% endfor %}
+ </div>
+</section>
+{% endblock %}

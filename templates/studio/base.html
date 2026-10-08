@@ -1,6 +1,6 @@
 {% load static studio_tags %}<!DOCTYPE html>
 <html lang="es-PE">
-<head><meta charset="utf-8"><link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#244d43"><title>{% block title %}Maryruss · Estudio de producción{% endblock %}</title><link rel="stylesheet" href="{% static 'studio.css' %}"><script src="{% static 'studio.js' %}" defer></script></head>
+<head><meta charset="utf-8"><link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#244d43"><title>{% block title %}Maryruss · Estudio de producción{% endblock %}</title><script src="{% static 'theme.js' %}"></script><link rel="stylesheet" href="{% static 'studio.css' %}"><link rel="stylesheet" href="{% static 'enhancements.css' %}"><link rel="stylesheet" href="{% static 'planner.css' %}"><script src="{% static 'planner.js' %}" defer></script><script src="{% static 'studio.js' %}" defer></script></head>
 <body>
 <a class="skip-link" href="#contenido">Ir al contenido</a>
 <aside class="sidebar" id="sidebar">
@@ -8,22 +8,24 @@
  <span class="nav-label">TU ESPACIO DE TRABAJO</span>
  <nav aria-label="Principal">
   <a class="nav-item {% if nav == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">{% include 'studio/icon.html' with name='dashboard' %} Resumen <span class="nav-dot"></span></a>
+  <a class="nav-item {% if nav == 'planner' %}active{% endif %}" href="{% url 'planner:index' %}">{% include 'studio/icon.html' with name='chart' %} Planificador</a>
   <a class="nav-item {% if nav == 'collections' %}active{% endif %}" href="{% url 'collection_list' %}">{% include 'studio/icon.html' with name='layers' %} Colecciones</a>
   <a class="nav-item {% if nav == 'models' %}active{% endif %}" href="{% url 'garment_list' %}">{% include 'studio/icon.html' with name='shirt' %} Modelos</a>
   <a class="nav-item {% if nav == 'expenses' %}active{% endif %}" href="{% url 'expense_list' %}">{% include 'studio/icon.html' with name='wallet' %} Costos y pagos</a>
   <a class="nav-item {% if nav == 'activity' %}active{% endif %}" href="{% url 'activity' %}">{% include 'studio/icon.html' with name='clock' %} Historial</a>
+  <a class="nav-item {% if nav == 'settings' %}active{% endif %}" href="{% url 'settings' %}">{% include 'studio/icon.html' with name='settings' %} Ajustes</a>
  </nav>
  <div class="sidebar-bottom"><div class="studio-note"><span class="note-icon">✳</span><strong>Del diseño a la entrega.</strong><p>Las cantidades claras.<br>Los costos bajo control.</p></div>
  <a class="nav-item {% if nav == 'guide' %}active{% endif %}" href="{% url 'guide' %}">{% include 'studio/icon.html' with name='help' %} Guía de uso</a>
  <div class="sidebar-foot">HECHO PARA TU NEGOCIO <span>LIMA, PE</span></div></div>
 </aside>
 <div class="workspace">
- <header class="topbar"><div class="topbar-left"><button class="icon-button mobile-menu" aria-label="Abrir menú" aria-expanded="false" aria-controls="sidebar" id="menu-toggle">{% include 'studio/icon.html' with name='menu' %}</button><span class="breadcrumb">Mi estudio <span>/</span> {% block breadcrumb %}Resumen{% endblock %}</span></div><div class="topbar-right"><span class="today">{% include 'studio/icon.html' with name='calendar' %} {{ today|date:'d M Y' }}</span>{% if demo_mode %}<span class="badge demo">DEMO · datos ficticios</span>{% else %}<span class="badge live">Mi negocio</span>{% endif %}<details class="account"><summary><span class="user-avatar">{{ user.username|initial }}</span><span class="account-name">{{ user.username }}</span></summary><div class="account-menu"><a href="{% url 'password_change' %}">Cambiar contraseña</a><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Cerrar sesión</button></form></div></details></div></header>
+ <header class="topbar"><div class="topbar-left"><button class="icon-button mobile-menu" aria-label="Abrir menú" aria-expanded="false" aria-controls="sidebar" id="menu-toggle">{% include 'studio/icon.html' with name='menu' %}</button><span class="breadcrumb">Mi estudio <span>/</span> {% block breadcrumb %}Resumen{% endblock %}</span></div><div class="topbar-right">{% include 'studio/theme_selector.html' %}<span class="today">{% include 'studio/icon.html' with name='calendar' %} {{ today|date:'d M Y' }}</span>{% if demo_mode %}<span class="badge demo">DEMO · datos ficticios</span>{% else %}<span class="badge live">Mi negocio</span>{% endif %}<details class="account"><summary><span class="user-avatar">{{ user.username|initial }}</span><span class="account-name">{{ user.username }}</span></summary><div class="account-menu"><a href="{% url 'password_change' %}">Cambiar contraseña</a><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Cerrar sesión</button></form></div></details></div></header>
  <main id="contenido">
  {% if demo_mode %}<div class="demo-banner">Estás en un espacio de prueba. Puedes explorar y registrar operaciones; tus datos reales viven en una base separada.</div>{% endif %}
  {% if messages %}<div class="messages" aria-live="polite">{% for message in messages %}<div class="message {{ message.tags }}" role="status">{% include 'studio/icon.html' with name='info' %} {{ message }}</div>{% endfor %}</div>{% endif %}
  {% block content %}{% endblock %}
- <footer class="page-footer"><span>maryruss <span class="footer-dot">·</span> Una producción a la vez.</span><span>PEN · America/Lima</span></footer>
+ <footer class="page-footer"><span>maryruss <span class="footer-dot">·</span> Una producción a la vez.</span><span>{% if nav == 'planner' %}{% if data %}{{ data.project.currency }}{% elif project %}{{ project.currency }}{% else %}Moneda por plan{% endif %}{% else %}PEN{% endif %} · America/Lima</span></footer>
  </main>
 </div>
 </body></html>

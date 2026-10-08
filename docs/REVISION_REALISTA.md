@@ -1,5 +1,7 @@
 # Revisión realista de la propuesta para Maryruss
 
+Documento histórico de la revisión inicial, anterior al desarrollo. El alcance implementado actualmente se describe en README y docs/PLANIFICADOR.md; las capacidades propuestas aquí no se presentan como todas implementadas.
+
 ## Dictamen
 
 La idea es viable como herramienta interna para un negocio pequeño si la primera entrega se centra en un recorrido operativo completo y comprobable. El documento original reúne buenos requisitos, pero su alcance se aproxima a un sistema de gestión empresarial especializado. Pedir todas las funciones a la vez aumenta el riesgo de recibir pantallas sin operaciones fiables.

@@ -1,8 +1,9 @@
 from django.contrib.auth import views as auth_views
-from django.urls import path
+from django.urls import path, include
 from studio import views
 
 urlpatterns = [
+    path('planificador/', include('planner.urls')),
     path('ingresar/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('salir/', auth_views.LogoutView.as_view(), name='logout'),
     path('demo/entrar/', views.demo_login, name='demo_login'),
@@ -28,6 +29,11 @@ urlpatterns = [
     path('registro/<str:entity>/<int:pk>/anular/', views.void_form, name='void'),
     path('actividad/', views.activity, name='activity'),
     path('guia/', views.guide, name='guide'),
+    path('ajustes/', views.settings_view, name='settings'),
+    path('ajustes/categorias/nueva/', views.category_form, name='category_create'),
+    path('ajustes/categorias/opciones/', views.category_options, name='category_options'),
+    path('ajustes/categorias/<str:code>/editar/', views.category_form, name='category_edit'),
+    path('ajustes/categorias/<str:code>/estado/', views.category_status, name='category_status'),
     path('exportar/<str:entity>/', views.export_csv, name='export'),
     path('respaldo/', views.backup_download, name='backup'),
 ]

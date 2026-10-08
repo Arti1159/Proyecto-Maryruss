@@ -9,14 +9,15 @@ from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
-from django.db import transaction
-from django.http import HttpResponse, Http404
+from django.db import transaction, IntegrityError
+from django.db.models import Prefetch
+from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-from .forms import CollectionForm, GarmentForm, BudgetLineForm, ExpenseForm, ProductionForm, PaidForm, VoidForm
-from .models import Collection, Garment, BudgetLine, Expense, ProductionEvent, Audit, CATEGORIES
+from .forms import CollectionForm, GarmentForm, BudgetLineForm, ExpenseForm, ProductionForm, PaidForm, VoidForm, ExpenseCategoryForm
+from .models import Collection, Garment, BudgetLine, Expense, ProductionEvent, Audit, ExpenseCategory
 from .services import enrich, summarize, snapshot, line_total, money, audit, lock_model, check_active, check_amounts, approve_budget, record_event, record_expense, void_record, set_paid
 
 ZERO = Decimal('0.00')
@@ -31,7 +32,7 @@ def staff_required(view):
     return wrapped
 
 def base_models():
-    return Garment.objects.select_related('collection').prefetch_related('budget_lines', 'events', 'expenses')
+    return Garment.objects.select_related('collection').prefetch_related(Prefetch('budget_lines', queryset=BudgetLine.objects.select_related('category')), 'events', Prefetch('expenses', queryset=Expense.objects.select_related('category')))
 
 def selected_collection(request, include_archived=False):
     collections = Collection.objects.all()
@@ -78,7 +79,7 @@ def dashboard(request):
     peak = max((x['amount'] for x in chart), default=ZERO)
     for bar in chart:
         bar['height'] = max(4, int(100 * bar['amount'] / peak)) if peak and bar['amount'] else 0
-    category_totals = [{'label': label, 'amount': sum((e.amount for e in expenses if e.category == key), ZERO), 'key': key} for key, label in CATEGORIES]
+    category_totals = [{'label': label, 'amount': sum((e.amount for e in expenses if e.category_id == key), ZERO), 'key': key} for key, label in ExpenseCategory.objects.values_list('code', 'name')]
     category_totals = sorted([x for x in category_totals if x['amount']], key=lambda x: x['amount'], reverse=True)
     for category in category_totals:
         category['pct'] = round(category['amount'] * 100 / figures['actual']) if figures['actual'] else 0
@@ -176,9 +177,9 @@ def garment_detail(request, pk):
         line.total = line_total(line, garment.planned_units)
         line.per_garment = money(line.total / garment.planned_units)
     categories = []
-    for key, label in CATEGORIES:
-        estimate = sum((l.total for l in lines if l.category == key), ZERO)
-        actual = sum((e.amount for e in garment.expenses.all() if e.category == key and not e.voided), ZERO)
+    for key, label in ExpenseCategory.objects.values_list('code', 'name'):
+        estimate = sum((l.total for l in lines if l.category_id == key), ZERO)
+        actual = sum((e.amount for e in garment.expenses.all() if e.category_id == key and not e.voided), ZERO)
         if estimate or actual:
             categories.append({'label': label, 'planned': estimate, 'actual': actual, 'delta': estimate - actual})
     return render(request, 'studio/model_detail.html', {'nav': 'models', 'garment': garment, 's': summary, 'lines': lines, 'categories': categories, 'expenses': garment.expenses.all(), 'events': garment.events.all(), 'audits': garment.audit_set.select_related('user')[:15]})
@@ -194,6 +195,7 @@ def budget_line_form(request, pk, line_id=None):
                 locked = lock_model(pk)
                 check_active(locked)
                 old = snapshot(locked)
+                form.instance.full_clean()
                 form.save()
                 check_amounts(locked)
                 audit(request.user, 'budget.edited', f'Plan de costos actualizado: {garment.code}', locked, {'previous': old, 'current': snapshot(locked)})
@@ -201,7 +203,7 @@ def budget_line_form(request, pk, line_id=None):
             return redirect(reverse('garment_detail', args=[pk]) + '#presupuesto')
         except ValidationError as error:
             form.add_error(None, error)
-    return render(request, 'studio/form.html', {'nav': 'models', 'form': form, 'title': 'Editar concepto' if line_id else 'Añadir costo previsto', 'subtitle': str(garment), 'back': reverse('garment_detail', args=[pk]), 'budget_calculator': True, 'planned_units': garment.planned_units})
+    return render(request, 'studio/form.html', {'nav': 'models', 'form': form, 'title': 'Editar costo previsto' if line_id else 'Añadir costo previsto', 'subtitle': str(garment), 'back': reverse('garment_detail', args=[pk]), 'budget_calculator': True, 'planned_units': garment.planned_units})
 
 @staff_required
 @require_POST
@@ -278,17 +280,17 @@ def operation_form(request, form_class, record, title, subtitle, nav):
 @login_required
 def expense_list(request):
     collections, selected = selected_collection(request, include_archived=True)
-    query = Expense.objects.select_related('garment__collection', 'created_by')
+    query = Expense.objects.select_related('garment__collection', 'created_by', 'category')
     if selected:
         query = query.filter(garment__collection=selected)
     category = request.GET.get('category', '')
-    if category in dict(CATEGORIES):
+    if ExpenseCategory.objects.filter(pk=category).exists():
         query = query.filter(category=category)
     if request.GET.get('q'):
         from django.db.models import Q
         query = query.filter(Q(description__icontains=request.GET['q']) | Q(garment__code__icontains=request.GET['q']) | Q(reference__icontains=request.GET['q']))
     active = list(query.filter(voided=False))
-    return render(request, 'studio/expenses.html', {'nav': 'expenses', 'page': Paginator(query, 30).get_page(request.GET.get('page')), 'collections': collections, 'selected': selected, 'categories': CATEGORIES, 'category': category, 'amount': sum((e.amount for e in active), ZERO), 'paid': sum((e.paid_amount for e in active), ZERO)})
+    return render(request, 'studio/expenses.html', {'nav': 'expenses', 'page': Paginator(query, 30).get_page(request.GET.get('page')), 'collections': collections, 'selected': selected, 'categories': ExpenseCategory.objects.values_list('code', 'name'), 'category': category, 'amount': sum((e.amount for e in active), ZERO), 'paid': sum((e.paid_amount for e in active), ZERO)})
 
 @login_required
 def paid_form(request, pk):
@@ -364,6 +366,7 @@ def export_csv(request, entity):
         if selected:
             query = query.filter(garment__collection=selected)
         if entity == 'gastos':
+            query = query.select_related('category')
             row(['ID', 'Fecha', 'Colección', 'Modelo', 'Categoría', 'Concepto', 'Costo PEN', 'Pagado PEN', 'Proveedor', 'Referencia', 'Anulado', 'Motivo', 'Usuario'])
             for e in query:
                 row([e.pk, e.date, e.garment.collection.name, e.garment.code, e.get_category_display(), e.description, e.amount, e.paid_amount, e.supplier, e.reference, e.voided, e.void_reason, e.created_by.username])
@@ -384,5 +387,48 @@ def backup_download(request):
     audit(request.user, 'backup.created', 'Respaldo completo descargado')
     response = HttpResponse(payload, content_type='application/zip')
     response['Content-Disposition'] = f'attachment; filename="maryruss-respaldo-{timezone.localtime():%Y%m%d-%H%M%S}.zip"'
+    response['Cache-Control'] = 'no-store'
+    return response
+
+@login_required
+def settings_view(request):
+    return render(request, 'studio/settings.html', {'nav': 'settings', 'categories': ExpenseCategory.objects.all()})
+
+@staff_required
+def category_form(request, code=None):
+    instance = get_object_or_404(ExpenseCategory, pk=code) if code else None
+    form = ExpenseCategoryForm(request.POST or None, instance=instance)
+    if request.method == 'POST' and form.is_valid():
+        try:
+            with transaction.atomic():
+                previous = None
+                # ModelForm mutates its instance during validation; read the stored version for the audit.
+                if code:
+                    previous = ExpenseCategory.objects.values('name', 'description').get(pk=code)
+                saved = form.save()
+                audit(request.user, 'category.saved', f'Categoría guardada: {saved.name}', details={'code': saved.pk, 'previous': previous, 'name': saved.name, 'description': saved.description})
+            messages.success(request, 'Categoría guardada. Ya está disponible en presupuestos y costos reales.' if saved.active else 'Categoría guardada. Reactívala para usarla en registros nuevos.')
+            return redirect('settings')
+        except IntegrityError:
+            form.add_error('name', 'Ya existe una categoría con ese nombre. Revisa las categorías de Ajustes.')
+    return render(request, 'studio/form.html', {'nav': 'settings', 'form': form, 'title': 'Editar categoría de gasto' if code else 'Nueva categoría de gasto', 'subtitle': 'Las categorías agrupan tus costos. Cambiar un nombre actualiza su presentación en los registros existentes y conserva los importes.', 'back': reverse('settings')})
+
+@staff_required
+@require_POST
+def category_status(request, code):
+    if request.POST.get('active') not in ('0', '1'):
+        return HttpResponse('Estado de categoría inválido.', status=400)
+    with transaction.atomic():
+        active = request.POST['active'] == '1'
+        if not ExpenseCategory.objects.filter(pk=code).update(active=active):
+            raise Http404
+        category = ExpenseCategory.objects.get(pk=code)
+        audit(request.user, 'category.status', f'{"Reactivada" if active else "Archivada"}: {category.name}', details={'code': code, 'active': active})
+    messages.success(request, 'Categoría reactivada: puedes elegirla en registros nuevos.' if active else 'Categoría archivada. Sus presupuestos, costos y pagos anteriores se conservan.')
+    return redirect('settings')
+
+@login_required
+def category_options(request):
+    response = JsonResponse({'categories': list(ExpenseCategory.objects.filter(active=True).values('code', 'name', 'description'))})
     response['Cache-Control'] = 'no-store'
     return response

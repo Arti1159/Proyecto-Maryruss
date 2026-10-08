@@ -10,4 +10,5 @@ fi
 .venv/bin/python manage.py init_admin
 env -u MARYRUSS_DB MARYRUSS_DEMO=1 .venv/bin/python manage.py migrate --noinput
 env -u MARYRUSS_DB MARYRUSS_DEMO=1 .venv/bin/python manage.py seed_demo
+env -u MARYRUSS_DB MARYRUSS_DEMO=1 .venv/bin/python manage.py seed_planner_demo
 .venv/bin/python manage.py check

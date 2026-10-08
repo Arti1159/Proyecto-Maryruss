@@ -1,2 +1,43 @@
-{% extends 'studio/base.html' %}{% load studio_tags %}{% block breadcrumb %}{{ title }}{% endblock %}
-{% block content %}<a class="back-link" href="{{ back }}">← Volver</a><section class="page-heading"><div><span class="eyebrow">UN REGISTRO, MÁS CLARIDAD</span><h1>{{ title }}</h1><p>{{ subtitle }}</p></div></section><div class="form-layout"><section class="card form-card"><form method="post" novalidate class="business-form" {% if budget_calculator %}data-budget-units="{{ planned_units }}"{% endif %}>{% csrf_token %}{% for hidden in form.hidden_fields %}{{ hidden }}{% for error in hidden.errors %}<div class="field-error">{{ error }}</div>{% endfor %}{% endfor %}{% if form.non_field_errors %}<div class="form-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}<div class="form-grid">{% for field in form.visible_fields %}<div class="field {% if field.name == 'notes' or field.name == 'description' or field.name == 'reason' %}field-wide{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required" aria-hidden="true">*</span>{% endif %}</label>{{ field }}{% if field.help_text %}<p class="field-help">{{ field.help_text }}</p>{% endif %}{% for error in field.errors %}<p class="field-error" role="alert">{{ error }}</p>{% endfor %}</div>{% endfor %}</div>{% if budget_calculator %}<div class="calculator-preview" aria-live="polite"><span>Vista previa para {{ planned_units }} prendas</span><strong id="budget-preview">Completa cantidad y precio</strong><small>El importe se verifica al guardar.</small></div>{% endif %}<div class="form-actions"><a class="btn btn-secondary" href="{{ back }}">Cancelar</a><button class="btn {% if danger %}btn-danger{% else %}btn-primary{% endif %}" type="submit">{{ submit_label|default:'Guardar registro' }}</button></div></form></section><aside class="form-aside"><span class="aside-symbol">✳</span><h2>Lo que registras<br>queda conectado.</h2>{% if context_model %}<p><strong>{{ context_model.name }}</strong><br>{{ context_model.code }} · {{ context_model.collection.name }}</p><dl><dt>Unidades autorizadas</dt><dd>{{ context_model.approved_units }}</dd><dt>Presupuesto de referencia</dt><dd>{{ context_model.summary.baseline|pen }}</dd><dt>Costo registrado</dt><dd>{{ context_model.summary.actual|pen }}</dd></dl>{% if production_help %}<div class="aside-tip">Antes de este avance:<br>Corte: {{ context_model.summary.counts.cut }}<br>Confección: {{ context_model.summary.counts.sewing }}<br>Acabados: {{ context_model.summary.counts.finishing }}<br>Calidad aprobada: {{ context_model.summary.good }}<br>Rechazadas: {{ context_model.summary.counts.rejected }}</div>{% endif %}{% else %}<p>Los presupuestos sirven para planificar. Los costos reales se registran cuando corresponden, y los pagos se siguen por separado.</p>{% endif %}<div class="aside-tip">{% include 'studio/icon.html' with name='info' %} Los campos con * son obligatorios. Las fechas de avances y costos corresponden a operaciones realizadas.</div></aside></div>{% endblock %}
+{% extends 'studio/base.html' %}{% load studio_tags %}
+{% block breadcrumb %}{{ title }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ back }}">← Volver</a>
+<section class="page-heading"><div><span class="eyebrow">UN REGISTRO, MÁS CLARIDAD</span><h1>{{ title }}</h1><p>{{ subtitle }}</p></div></section>
+{% if budget_calculator %}<div class="notice budget-intro"><div><strong>Estás preparando un presupuesto para {{ planned_units }} prendas.</strong><p>Registra un material o servicio a la vez. Elige si su costo se repite en cada prenda o corresponde a todo el lote. Aquí estimas lo que gastarás; los costos reales y pagos se registran después en «Costos y pagos».</p></div></div>{% endif %}
+<div class="form-layout">
+<section class="card form-card">
+<form method="post" novalidate class="business-form" {% if budget_calculator %}data-budget-units="{{ planned_units }}"{% endif %}>
+{% csrf_token %}
+{% for hidden in form.hidden_fields %}{{ hidden }}{% for error in hidden.errors %}<div class="field-error">{{ error }}</div>{% endfor %}{% endfor %}
+{% if form.non_field_errors %}<div class="form-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+<div class="form-grid">
+{% for field in form.visible_fields %}
+<div class="field {% if field.name == 'notes' or field.name == 'description' or field.name == 'reason' or field.name == 'basis' %}field-wide{% endif %}">
+ <div class="field-label"><label for="{{ field.id_for_label }}"><span data-field-label="{{ field.name }}">{{ field.label }}</span>{% if field.field.required %}<span class="required" aria-hidden="true">*</span>{% endif %}</label>
+ {% if field.field.info_text %}<details class="field-info"><summary aria-label="Información sobre {{ field.label }}">{% include 'studio/icon.html' with name='info' %}</summary><p>{{ field.field.info_text }}</p></details>{% endif %}</div>
+ {{ field }}
+ {% if field.help_text %}<p class="field-help" id="{{ field.id_for_label }}_help">{{ field.help_text }}</p>{% endif %}
+ {% if field.name == 'category' and form.category_settings %}<div class="category-field-actions">{% if user.is_staff %}<a href="{% url 'settings' %}" target="_blank" rel="noopener" class="text-link">Administrar categorías ↗<span class="sr-only"> (abre otra pestaña)</span></a>{% endif %}<button class="text-link refresh-categories" type="button">Actualizar lista</button><span class="category-refresh-status" role="status"></span></div>{% endif %}
+ {% for error in field.errors %}<p class="field-error" role="alert">{{ error }}</p>{% endfor %}
+</div>
+{% endfor %}
+</div>
+{% if budget_calculator %}
+<datalist id="budget-unit-options"><option value="metro"><option value="unidad"><option value="prenda"><option value="kilo"><option value="servicio"><option value="hora"><option value="juego"></datalist>
+<section class="calculator-preview" aria-label="Vista previa del costo" aria-live="polite" aria-atomic="true">
+ <span>Este concepto · {{ planned_units }} prendas previstas</span>
+ <div class="calculator-amounts"><div><span>Costo por prenda</span><strong id="budget-unit-preview">—</strong></div><div><span>Costo total del modelo</span><strong id="budget-preview">Completa cantidad y precio</strong></div></div>
+ <p id="budget-formula">La cantidad y el precio usan la misma unidad de medida.</p><small>Solo este concepto. El presupuesto del modelo suma todos los conceptos. El importe se verifica al guardar y se redondea a centavos.</small>
+</section>
+<details class="budget-examples"><summary>Ver ejemplos: tela, confección y costo fijo</summary><div class="example-grid">
+ <article><strong>Tela por prenda</strong><p>Se repite en cada prenda · cantidad <b>1.2</b> · unidad <b>metro</b> · precio <b>S/ 10</b>.</p><p>Resultado: S/ 12 por prenda. Para 500 prendas: S/ 6 000.</p></article>
+ <article><strong>Confección por prenda</strong><p>Se repite en cada prenda · cantidad <b>1</b> · unidad <b>prenda</b> · precio <b>S/ 15</b>.</p><p>Resultado: S/ 15 por prenda. Para 500 prendas: S/ 7 500.</p></article>
+ <article><strong>Transporte del lote</strong><p>Es un costo para todo el lote · cantidad <b>1</b> · unidad <b>servicio</b> · precio <b>S/ 80</b>.</p><p>Resultado: S/ 80 para todo el lote. Para 500 prendas: S/ 0.16 por prenda.</p></article>
+</div><small>Ejemplos ilustrativos. Usa los consumos y precios reales de tu producción.</small></details>
+{% endif %}
+<div class="form-actions"><a class="btn btn-secondary" href="{{ back }}">Cancelar</a><button class="btn {% if danger %}btn-danger{% else %}btn-primary{% endif %}" type="submit">{{ submit_label|default:'Guardar registro' }}</button></div>
+</form>
+</section>
+<aside class="form-aside"><span class="aside-symbol">✳</span><h2>Lo que registras<br>queda conectado.</h2>{% if context_model %}<p><strong>{{ context_model.name }}</strong><br>{{ context_model.code }} · {{ context_model.collection.name }}</p><dl><dt>Unidades autorizadas</dt><dd>{{ context_model.approved_units }}</dd><dt>Presupuesto de referencia</dt><dd>{{ context_model.summary.baseline|pen }}</dd><dt>Costo registrado</dt><dd>{{ context_model.summary.actual|pen }}</dd></dl>{% if production_help %}<div class="aside-tip">Antes de este avance:<br>Corte: {{ context_model.summary.counts.cut }}<br>Confección: {{ context_model.summary.counts.sewing }}<br>Acabados: {{ context_model.summary.counts.finishing }}<br>Calidad aprobada: {{ context_model.summary.good }}<br>Rechazadas: {{ context_model.summary.counts.rejected }}</div>{% endif %}{% else %}<p>Los presupuestos sirven para planificar. Los costos reales se registran cuando corresponden, y los pagos se siguen por separado.</p>{% endif %}<div class="aside-tip">{% include 'studio/icon.html' with name='info' %} Los campos con * son obligatorios. Las fechas de avances y costos corresponden a operaciones realizadas.</div></aside>
+</div>
+{% endblock %}

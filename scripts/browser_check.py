@@ -47,13 +47,13 @@ with sync_playwright() as p:
         ('packaging', 'Empaque', 'unit', '1', 'prenda', '1'),
         ('transport', 'Servicio fijo', 'batch', '1', 'servicio', '100'),
     ]:
-        page.get_by_role('link', name='Añadir concepto').click()
-        page.get_by_label('Categoría').select_option(category)
-        page.get_by_label('Concepto').fill(label)
-        page.get_by_label('Se aplica').select_option(basis)
-        page.get_by_label('Cantidad / consumo').fill(quantity)
+        page.get_by_role('link', name='Añadir costo previsto').click()
+        page.locator('#id_category').select_option(category)
+        page.locator('#id_description').fill(label)
+        page.locator('#id_basis').select_option(basis)
+        page.locator('#id_quantity').fill(quantity)
         page.locator('#id_unit').fill(unit)
-        page.get_by_label('Precio por unidad de insumo').fill(price)
+        page.locator('#id_unit_price').fill(price)
         page.get_by_role('button', name='Guardar registro').click()
         page.wait_for_url('**#presupuesto')
     check('Presupuesto total calculado', 'S/ 560.00' in page.locator('#presupuesto').inner_text())
@@ -70,7 +70,7 @@ with sync_playwright() as p:
         page.wait_for_url('**#produccion')
     check('Producción parcial de 10 prendas', '10 buenas' in page.locator('#produccion').inner_text())
     page.get_by_role('link', name='Registrar costo', exact=False).first.click()
-    page.get_by_label('Categoría').select_option('fabric')
+    page.locator('#id_category').select_option('fabric')
     page.get_by_label('Concepto').fill('Consumos y servicios de 10 prendas')
     page.get_by_label('Costo real total').fill('330')
     page.get_by_label('Importe pagado').fill('100')

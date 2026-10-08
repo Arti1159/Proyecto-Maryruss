@@ -20,7 +20,7 @@ ALLOWED_HOSTS = os.environ.get('MARYRUSS_ALLOWED_HOSTS', 'localhost,127.0.0.1,[:
 CSRF_TRUSTED_ORIGINS = [x for x in os.environ.get('MARYRUSS_CSRF_ORIGINS', '').split(',') if x]
 INSTALLED_APPS = [
     'django.contrib.auth', 'django.contrib.contenttypes', 'django.contrib.sessions',
-    'django.contrib.messages', 'django.contrib.staticfiles', 'studio',
+    'django.contrib.messages', 'django.contrib.staticfiles', 'studio', 'planner',
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware', 'django.contrib.sessions.middleware.SessionMiddleware',
@@ -79,3 +79,9 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
 SECURE_HSTS_PRELOAD = False
 if os.environ.get('MARYRUSS_TRUST_PROXY') == '1':
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Optional real online research. Keys stay on the server and never in templates.
+MARYRUSS_RESEARCH_API_KEY = os.environ.get('MARYRUSS_RESEARCH_API_KEY') or os.environ.get('TAVILY_API_KEY', '')
+
+# Bounded variant formsets use up to 5 fields per row plus management fields.
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 7000

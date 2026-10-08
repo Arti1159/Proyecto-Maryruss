@@ -32,7 +32,7 @@ class StudioTests(TestCase):
             ('sewing', 'Confección', '1', '8', 'unit'), ('packaging', 'Empaque', '1', '1', 'unit'),
             ('transport', 'Entrega fija', '1', '100', 'batch'),
         ]:
-            BudgetLine.objects.create(garment=cls.model, category=category, description=label, quantity=quantity, unit_price=unit_price, basis=basis)
+            BudgetLine.objects.create(garment=cls.model, category_id=category, description=label, quantity=quantity, unit_price=unit_price, basis=basis)
 
     def setUp(self):
         self.client.force_login(self.user)
@@ -54,7 +54,7 @@ class StudioTests(TestCase):
 
     def test_currency_rounding_is_half_up(self):
         self.model.budget_lines.all().delete()
-        BudgetLine.objects.create(garment=self.model, category='other', description='Ajuste', quantity=1, unit_price=Decimal('0.005'), basis='batch')
+        BudgetLine.objects.create(garment=self.model, category_id='other', description='Ajuste', quantity=1, unit_price=Decimal('0.005'), basis='batch')
         self.assertEqual(summarize(self.model)['planned'], Decimal('0.01'))
 
     def test_approval_snapshot_preserves_old_prices_and_quantities(self):
