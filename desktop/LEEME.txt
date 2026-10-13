@@ -1,0 +1,28 @@
+MARYRUSS PARA WINDOWS 11 (64 BITS)
+
+Descomprime todo el ZIP en una carpeta tuya, por ejemplo Documentos\Maryruss.
+Haz doble clic en Maryruss.exe. No muevas el EXE separado de _internal.
+Se abrirán una ventana de control y el navegador. No necesitas Python.
+En el primer arranque se crean la base y la cuenta admin. Usa el botón
+"Ver acceso inicial (privado)" y cambia la contraseña al ingresar.
+Cerrar el navegador no apaga la aplicación. Cierra la ventana Maryruss
+para detenerla antes de apagar el equipo, moverla o actualizarla.
+
+TUS DATOS
+Se guardan en datos\maryruss.sqlite3, junto al EXE, fuera de _internal.
+Abrir de nuevo conserva datos y cuentas. Nunca borres la carpeta datos.
+La aplicación no carga tus datos a un servicio remoto.
+Desde Guía de uso > Descargar respaldo, guarda un ZIP fuera del equipo.
+No hay respaldos automáticos. El CSV no sustituye un respaldo completo.
+
+ACTUALIZAR
+Descarga el respaldo primero y cierra Maryruss. Conserva datos y reemplaza
+Maryruss.exe y _internal con los de la nueva versión. La nueva versión
+ejecuta las migraciones al arrancar. No sobrescribas datos con otra copia.
+Para trasladarlo a otro equipo, copia la carpeta completa con Maryruss cerrado.
+La carpeta datos contiene información privada y acceso inicial: no la compartas.
+
+ALCANCE
+Uso local en una computadora. No expone el servicio a la red.
+La investigación online es opcional y requiere configuración aparte.
+El ejecutable no tiene firma digital; Windows puede mostrar una advertencia.

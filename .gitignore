@@ -13,3 +13,7 @@ backups/
 test-results/
 node_modules/
 .DS_Store
+.venv-windows/
+build/
+dist/
+datos/
