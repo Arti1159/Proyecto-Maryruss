@@ -118,6 +118,11 @@ if __name__ == '__main__':
         main()
     except Exception as error:
         if '--headless' in sys.argv:
+            # Windowed Windows executables have no console for a traceback.
+            if '--ready-file' in sys.argv:
+                import traceback
+                ready = Path(sys.argv[sys.argv.index('--ready-file') + 1])
+                ready.with_suffix('.error.txt').write_text(traceback.format_exc(), encoding='utf-8')
             raise
         import tkinter as tk
         from tkinter import messagebox

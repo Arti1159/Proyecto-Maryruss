@@ -26,6 +26,10 @@ def run(command):
                 deadline = time.monotonic() + 90
                 while not ready.exists():
                     if process.poll() is not None:
+                        error_file = ready.with_suffix('.error.txt')
+                        if error_file.exists():
+                            error = error_file.read_text(encoding='utf-8')
+                            print('::error::' + error.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'), flush=True)
                         raise RuntimeError(f'Launcher exited: {process.returncode}')
                     if time.monotonic() > deadline:
                         raise TimeoutError('Launcher did not become ready')
