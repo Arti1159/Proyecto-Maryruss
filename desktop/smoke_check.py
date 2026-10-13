@@ -74,4 +74,9 @@ def run(command):
 
 if __name__ == '__main__':
     command = [str(Path(sys.argv[1]).resolve())] if len(sys.argv) > 1 else [sys.executable, str(Path(__file__).with_name('launcher.py'))]
-    run(command)
+    try:
+        run(command)
+    except Exception:
+        import traceback
+        print('::error::' + traceback.format_exc().replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'), flush=True)
+        raise
