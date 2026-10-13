@@ -11,6 +11,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 import io
+from contextlib import closing
 
 
 def run(command):
@@ -55,7 +56,7 @@ def run(command):
                 with zipfile.ZipFile(io.BytesIO(archive)) as backup:
                     assert backup.testzip() is None
                     assert any(name.endswith('.sqlite3') for name in backup.namelist())
-                with sqlite3.connect(data / 'maryruss.sqlite3') as db:
+                with closing(sqlite3.connect(data / 'maryruss.sqlite3')) as db, db:
                     assert db.execute('PRAGMA integrity_check').fetchone()[0] == 'ok'
                     if not iteration:
                         db.execute('CREATE TABLE portable_persistence_check (value TEXT)')
