@@ -2,6 +2,7 @@ import hashlib
 import io
 import json
 import sqlite3
+from contextlib import closing
 import tempfile
 import uuid
 import zipfile
@@ -328,7 +329,7 @@ class BackupTests(TransactionTestCase):
         # Use actual migrations in an isolated file, independent of the test runner's in-memory DB.
         path = Path(directory) / 'source.sqlite3'
         from django.db import connection
-        with sqlite3.connect(path) as target:
+        with closing(sqlite3.connect(path)) as target:
             connection.connection.backup(target)
         return path
 
@@ -343,7 +344,7 @@ class BackupTests(TransactionTestCase):
             archive.write_bytes(payload)
             target = Path(directory) / 'restored.sqlite3'
             call_command('restore_backup', str(archive), target=str(target), confirm=True, stdout=io.StringIO())
-            with sqlite3.connect(target) as db:
+            with closing(sqlite3.connect(target)) as db:
                 self.assertEqual(db.execute('SELECT name FROM studio_collection').fetchone()[0], 'Persistente')
                 self.assertEqual(Decimal(str(db.execute('SELECT budget FROM studio_collection').fetchone()[0])), Decimal('1234.56'))
                 self.assertEqual(db.execute('SELECT COUNT(*) FROM django_session').fetchone()[0], 0)

@@ -15,6 +15,7 @@ jobs:
           python-version: '3.12'
           architecture: x64
       - run: python -m pip install -r desktop/requirements-build.txt
+      - run: python manage.py test --noinput
       - run: python -m PyInstaller --noconfirm --clean desktop/Maryruss.spec
       - run: python desktop/smoke_check.py dist/Maryruss/Maryruss.exe
       - shell: pwsh

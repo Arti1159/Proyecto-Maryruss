@@ -4,6 +4,7 @@ import json
 import sqlite3
 import tempfile
 import zipfile
+from contextlib import closing
 from pathlib import Path
 from django.conf import settings
 from django.utils import timezone
@@ -14,7 +15,7 @@ def create_backup(db_path=None):
         raise ValueError('No se encontró una base de datos persistente.')
     with tempfile.TemporaryDirectory(prefix='maryruss-backup-') as directory:
         snapshot = Path(directory) / 'database.sqlite3'
-        with sqlite3.connect(source_path) as source, sqlite3.connect(snapshot) as target:
+        with closing(sqlite3.connect(source_path)) as source, closing(sqlite3.connect(snapshot)) as target:
             source.backup(target)
         data = snapshot.read_bytes()
     manifest = {'format': 'maryruss-backup', 'version': 1, 'created_at': timezone.now().isoformat(),
@@ -44,7 +45,7 @@ def validate_backup(payload):
     with tempfile.TemporaryDirectory(prefix='maryruss-verify-') as directory:
         path = Path(directory) / 'check.sqlite3'
         path.write_bytes(data)
-        with sqlite3.connect(path) as db:
+        with closing(sqlite3.connect(path)) as db:
             if db.execute('PRAGMA integrity_check').fetchone()[0] != 'ok' or db.execute('PRAGMA foreign_key_check').fetchall():
                 raise ValueError('La base de datos del respaldo no supera la validación.')
             tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}

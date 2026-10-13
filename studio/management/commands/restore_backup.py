@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import tempfile
+from contextlib import closing
 from pathlib import Path
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
@@ -39,7 +40,7 @@ class Command(BaseCommand):
             try:
                 with os.fdopen(fd, 'wb') as stream:
                     stream.write(data)
-                with sqlite3.connect(temporary) as db:
+                with closing(sqlite3.connect(temporary)) as db, db:
                     db.execute('DELETE FROM django_session')
                 os.replace(temporary, target)
             finally:
